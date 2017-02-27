@@ -4,6 +4,7 @@ import errno
 import shutil
 import glob
 import sys
+import logging
 
 def make_sure_path_exists(path):
     try:
@@ -44,21 +45,30 @@ def removedirtree(file_path):
             shutil.rmtree(root)
             print "delete: " + root
         else:
-            r = glob.glob(root+"\\*.*")
+            r = glob.glob(root+"/*.*")
             for i in r:
                 os.remove(i)
                 print "delete file: " + i
 
 
-size = 1200, 1200
-directory = "C:\\Ds\\Immagini\\2017"
-dirthumb = "C:\\Ds\\Immagini\\prova"
+logger = logging.getLogger('resizeimage')
+hdlr = logging.FileHandler('resizeimage.log')
+formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
+hdlr.setFormatter(formatter)
+logger.addHandler(hdlr) 
+logger.setLevel(logging.WARNING)
+
+size = 800, 800
+directory = "/volume1/Dati/Immagini/2016"
+dirthumb = "/volume1/photo"
 removedirtree(dirthumb)
 
 
 for root, dirs, files in os.walk(directory):
     print"***********************************"
-    print root + " - " + convert_bytes(getFolderSize(root))
+	dimensione = convert_bytes(getFolderSize(root))
+    print root + " - " + dimensione
+	logger.info(root + " - " + dimensione)
     newdir = root.replace(directory,dirthumb)
     if root != directory:
         print "mkdir: " + newdir
@@ -66,12 +76,20 @@ for root, dirs, files in os.walk(directory):
     numfile = 0
     for filename in os.listdir(root):
         if filename.lower().endswith(".jpg"):
-            infile = os.path.join(root, filename)
-            im = Image.open(infile)
-            im.thumbnail(size)
-            im.save(newdir + "\\" + filename, "JPEG")
-            print infile
-            print newdir + "\\" + filename
-            numfile = numfile + 1
+			try:
+				infile = os.path.join(root, filename)
+				im = Image.open(infile)
+				im.thumbnail(size)
+				im.save(newdir + "/" + filename, "JPEG")
+				print infile
+				print newdir + "/" + filename
+				numfile = numfile + 1
+			except:
+				messaggio = "errore di conversione al file %s" % infile
+				print messaggio
+				logger.error(messaggio)
     print "convertiti %s file" % numfile
+	logger.info("convertiti %s file" % numfile)
+            
+
             
